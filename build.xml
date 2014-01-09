@@ -1,17 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <project name="play-liquibase" default="build" basedir=".">
 
-	<import file="commons/commons.xml"/>
-	
-	<target name="custom:copy">
-		<copy todir="lib">
-			<fileset dir="lib/compile">
-				<include name="liquibase-core.jar"/>
-			</fileset>
-		</copy>
-	</target>
+  <target name="check" unless="play.path">
+    <fail message="Please specify Play framework path using -Dplay.path=/path/to/framework/home"/>
+  </target>
 
-	<target name="run-tests">
-		<echo>any play run-test app can be calle in this place</echo>
-	</target>
+  <path id="project.classpath">
+    <pathelement path="${play.path}/framework/classes"/>
+    <fileset dir="${play.path}/framework/lib">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${play.path}/framework">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="lib">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="build" depends="compile">
+    <mkdir dir="lib"/>
+    <copy todir="tmp/classes">
+      <fileset dir="src">
+        <include name="**/*.properties"/>
+        <include name="**/*.xml"/>
+        <include name="**/play.plugins"/>
+        <include name="**/play.static"/>
+      </fileset>
+    </copy>
+    <jar destfile="lib/play-liquibase.jar" basedir="tmp/classes">
+      <manifest>
+        <section name="Play-module">
+          <attribute name="Specification-Title" value="play-liquibase"/>
+        </section>
+      </manifest>
+    </jar>
+    <delete dir="tmp"/>
+  </target>
+
+  <target name="compile" depends="check">
+    <mkdir dir="tmp/classes"/>
+    <javac srcdir="src" destdir="tmp/classes" target="1.7" source="1.7" debug="true">
+      <classpath refid="project.classpath"/>
+    </javac>
+  </target>
 
 </project>

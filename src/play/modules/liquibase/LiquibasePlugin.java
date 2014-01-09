@@ -1,15 +1,5 @@
 package play.modules.liquibase;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -17,18 +7,21 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import liquibase.exception.ValidationFailedException;
-import liquibase.lockservice.LockService;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
-
 import org.hibernate.JDBCException;
-
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
 import play.db.DB;
 import play.utils.Properties;
+
+import java.io.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LiquibasePlugin extends PlayPlugin {
 
@@ -106,7 +99,7 @@ public class LiquibasePlugin extends PlayPlugin {
 							liquibase.reportLocks(System.out);
 							break;
 						case RELEASELOCKS :
-							LockService.getInstance(db).forceReleaseLock();
+              liquibase.forceReleaseLocks();
 							break;
 						case SYNC :
 							liquibase.changeLogSync(contexts);					
@@ -123,44 +116,39 @@ public class LiquibasePlugin extends PlayPlugin {
 							liquibase.clearCheckSums();
 							break;
 						case VALIDATE:
-							try {
-			                    liquibase.validate();
-			                } catch (ValidationFailedException e) {
-			                    Logger.error(e,"liquibase validation");
-			                }
-						default:
+              try {
+                liquibase.validate();
+              }
+              catch (ValidationFailedException e) {
+                Logger.error(e, "liquibase validation");
+              }
+            default:
 							break;
 					}
 					Logger.info("op [%s] performed",op);
 				}
-			} catch (SQLException sqe) { 
-				throw new LiquibaseUpdateException(sqe.getMessage());				
-			} catch (LiquibaseException e) { 
-				throw new LiquibaseUpdateException(e.getMessage());
-			} catch (IOException ioe) {
-				throw new LiquibaseUpdateException(ioe.getMessage());				
+			} catch (SQLException | LiquibaseException | IOException sqe) {
+				throw new LiquibaseUpdateException(sqe.getMessage(), sqe);
 			} finally {
 				if (null != db) {
 					try {						
 						db.close();
-					} catch (DatabaseException e) {
-						Logger.warn(e,"problem closing connection");
-					} catch (JDBCException jdbce) {
-						Logger.warn(jdbce,"problem closing connection");
+					} catch (DatabaseException | JDBCException e) {
+						Logger.warn(e,"problem closing connection: " + e, e);
 					}
 				}
 				if (null != pstream) {
 					try {
 						pstream.close();
 					} catch (Exception e) {
-						
+            Logger.warn(e,"problem closing pstream: " + e, e);
 					}
 				}
 				if (null != clstream) {
 					try {
 						clstream.close();
 					} catch (Exception e) {
-						
+            Logger.warn(e,"problem closing clstream: " + e, e);
 					}					
 				}				
 			}
