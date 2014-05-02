@@ -1,6 +1,6 @@
-self: play-liquibase -> play-liquibase 3.0.8
+self: play-liquibase -> play-liquibase 3.1.1
 
 require:
     - play 1.2+
-    - org.liquibase -> liquibase-core 3.0.8:
+    - org.liquibase -> liquibase-core 3.1.1:
         transitive: false
