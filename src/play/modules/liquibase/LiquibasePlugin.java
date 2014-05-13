@@ -25,97 +25,101 @@ import java.util.List;
 
 public class LiquibasePlugin extends PlayPlugin {
 
-	@Override
-	public void onApplicationStart() {
-		
-		String autoupdate = Play.configuration.getProperty("liquibase.active","false");
-		String mainchangelogpath = Play.configuration.getProperty("liquibase.changelog", "mainchangelog.xml");
-		String propertiespath = Play.configuration.getProperty("liquibase.properties", "liquibase.properties");
-		String scanner = Play.configuration.getProperty("liquibase.scanner", "jar");
-		String contexts = Play.configuration.getProperty("liquibase.contexts",null);
-		contexts = (null != contexts && !contexts.trim().isEmpty()) ? contexts : null;
-		String actions = Play.configuration.getProperty("liquibase.actions");
-		
-		if (null == actions) {
-			throw new LiquibaseUpdateException("No valid action found for liquibase operation");
-		}
-		
-		ResourceAccessor accessor = null;
-		if ("jar".equals(scanner)) {
-			accessor = new ClassLoaderResourceAccessor(Play.classloader);
-		} else if ("src".equals(scanner)) {
-			accessor = 	new FileSystemResourceAccessor(Play.applicationPath.getAbsolutePath());
-		} else {
-			throw new LiquibaseUpdateException("No valid scanner found liquibase operation " + scanner);
-		}
-		
-		List<LiquibaseAction> acts = new ArrayList<LiquibaseAction>();
-		
-		for (String action : actions.split(",")) {
-			LiquibaseAction op = LiquibaseAction.valueOf(action.toUpperCase());
-			acts.add(op);
-		}
-		
-		Database db = null;
-		
-		if (true == Boolean.valueOf(autoupdate)) {
-			
-			Logger.info("Auto update flag found and positive => let's get on with changelog update");
-			InputStream pstream = null;
-			InputStream clstream = null;
-			
-			try {
-				
-				Connection cnx = DB.datasource.getConnection();
+  @Override
+  public void onApplicationStart() {
 
-				Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(cnx));
-				
-				final Liquibase liquibase = new Liquibase(mainchangelogpath, accessor, database);
-				if ("jar".equals(scanner))  {
-					pstream = Play.classloader.getResourceAsStream(propertiespath);
-				} else {
-					pstream =  new FileInputStream(Play.getFile(propertiespath));
-				}
+    String autoupdate = Play.configuration.getProperty("liquibase.active", "false");
+    String mainchangelogpath = Play.configuration.getProperty("liquibase.changelog", "mainchangelog.xml");
+    String propertiespath = Play.configuration.getProperty("liquibase.properties", "liquibase.properties");
+    String scanner = Play.configuration.getProperty("liquibase.scanner", "jar");
+    String contexts = Play.configuration.getProperty("liquibase.contexts", null);
+    contexts = (null != contexts && !contexts.trim().isEmpty()) ? contexts : null;
+    String actions = Play.configuration.getProperty("liquibase.actions");
 
-				if (null != pstream) {
-					Properties props = new Properties();
-					props.load(pstream);
-					
-					for (String key:props.keySet()) {
-						String val = props.get(key);
-						Logger.info("found parameter [%1$s] / [%2$s] for liquibase update", key, val);
-						liquibase.setChangeLogParameter(key, val);
-					}
-				} else {
-					Logger.warn("Could not find properties file [%s]", propertiespath);
-				}
-				
-				db = liquibase.getDatabase();
-				for (LiquibaseAction op: acts) {
-					Logger.info("Dealing with op [%s]", op);
-					
-					switch (op) {
-						case LISTLOCKS:
-							liquibase.reportLocks(System.out);
-							break;
-						case RELEASELOCKS :
+    if (null == actions) {
+      throw new LiquibaseUpdateException("No valid action found for liquibase operation");
+    }
+
+    ResourceAccessor accessor = null;
+    if ("jar".equals(scanner)) {
+      accessor = new ClassLoaderResourceAccessor(Play.classloader);
+    }
+    else if ("src".equals(scanner)) {
+      accessor = new FileSystemResourceAccessor(Play.applicationPath.getAbsolutePath());
+    }
+    else {
+      throw new LiquibaseUpdateException("No valid scanner found liquibase operation " + scanner);
+    }
+
+    List<LiquibaseAction> acts = new ArrayList<LiquibaseAction>();
+
+    for (String action : actions.split(",")) {
+      LiquibaseAction op = LiquibaseAction.valueOf(action.toUpperCase());
+      acts.add(op);
+    }
+
+    Database db = null;
+
+    if (true == Boolean.valueOf(autoupdate)) {
+
+      Logger.info("Auto update flag found and positive => let's get on with changelog update");
+      InputStream pstream = null;
+      InputStream clstream = null;
+
+      try {
+
+        Connection cnx = DB.datasource.getConnection();
+
+        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(cnx));
+
+        final Liquibase liquibase = new Liquibase(mainchangelogpath, accessor, database);
+        if ("jar".equals(scanner)) {
+          pstream = Play.classloader.getResourceAsStream(propertiespath);
+        }
+        else {
+          pstream = new FileInputStream(Play.getFile(propertiespath));
+        }
+
+        if (null != pstream) {
+          Properties props = new Properties();
+          props.load(pstream);
+
+          for (String key : props.keySet()) {
+            String val = props.get(key);
+            Logger.info("found parameter [%1$s] / [%2$s] for liquibase update", key, val);
+            liquibase.setChangeLogParameter(key, val);
+          }
+        }
+        else {
+          Logger.warn("Could not find properties file [%s]", propertiespath);
+        }
+
+        db = liquibase.getDatabase();
+        for (LiquibaseAction op : acts) {
+          Logger.info("Dealing with op [%s]", op);
+
+          switch (op) {
+            case LISTLOCKS:
+              liquibase.reportLocks(System.out);
+              break;
+            case RELEASELOCKS:
               liquibase.forceReleaseLocks();
-							break;
-						case SYNC :
-							liquibase.changeLogSync(contexts);					
-							break;
-						case STATUS:
-							File tmp = Play.tmpDir.createTempFile("liquibase", ".status");
-							liquibase.reportStatus(true, contexts, new FileWriter(tmp));
-							Logger.info("status dumped into file [%s]", tmp);
-							break;
-						case UPDATE:
-							liquibase.update(contexts);
-							break;
-						case CLEARCHECKSUMS:
-							liquibase.clearCheckSums();
-							break;
-						case VALIDATE:
+              break;
+            case SYNC:
+              liquibase.changeLogSync(contexts);
+              break;
+            case STATUS:
+              File tmp = Play.tmpDir.createTempFile("liquibase", ".status");
+              liquibase.reportStatus(true, contexts, new FileWriter(tmp));
+              Logger.info("status dumped into file [%s]", tmp);
+              break;
+            case UPDATE:
+              liquibase.update(contexts);
+              break;
+            case CLEARCHECKSUMS:
+              liquibase.clearCheckSums();
+              break;
+            case VALIDATE:
               try {
                 liquibase.validate();
               }
@@ -123,38 +127,44 @@ public class LiquibasePlugin extends PlayPlugin {
                 Logger.error(e, "liquibase validation");
               }
             default:
-							break;
-					}
-					Logger.info("op [%s] performed",op);
-				}
-			} catch (SQLException | LiquibaseException | IOException sqe) {
-				throw new LiquibaseUpdateException(sqe.getMessage(), sqe);
-			} finally {
-				if (null != db) {
-					try {						
-						db.close();
-					} catch (DatabaseException | JDBCException e) {
-						Logger.warn(e,"problem closing connection: " + e, e);
-					}
-				}
-				if (null != pstream) {
-					try {
-						pstream.close();
-					} catch (Exception e) {
-            Logger.warn(e,"problem closing pstream: " + e, e);
-					}
-				}
-				if (null != clstream) {
-					try {
-						clstream.close();
-					} catch (Exception e) {
-            Logger.warn(e,"problem closing clstream: " + e, e);
-					}					
-				}				
-			}
+              break;
+          }
+          Logger.info("op [%s] performed", op);
+        }
+      }
+      catch (SQLException | LiquibaseException | IOException sqe) {
+        throw new LiquibaseUpdateException(sqe.getMessage(), sqe);
+      }
+      finally {
+        if (null != db) {
+          try {
+            db.close();
+          }
+          catch (DatabaseException | JDBCException e) {
+            Logger.warn(e, "problem closing connection: " + e, e);
+          }
+        }
+        if (null != pstream) {
+          try {
+            pstream.close();
+          }
+          catch (Exception e) {
+            Logger.warn(e, "problem closing pstream: " + e, e);
+          }
+        }
+        if (null != clstream) {
+          try {
+            clstream.close();
+          }
+          catch (Exception e) {
+            Logger.warn(e, "problem closing clstream: " + e, e);
+          }
+        }
+      }
 
-		} else {
-			Logger.info("Auto update flag [%s] != true  => skipping structural update", autoupdate);
-		}
-	}
+    }
+    else {
+      Logger.info("Auto update flag [%s] != true  => skipping structural update", autoupdate);
+    }
+  }
 }
