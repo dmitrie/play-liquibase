@@ -1,7 +1,8 @@
 #!/bin/bash
-MODULE="play-liquibase"
+ORGANIZATION="play-liquibase"
+MODULE="liquibase"
 VERSION=`grep self conf/dependencies.yml | sed "s/.*$MODULE //"`
-TARGET=/var/www/repo/$MODULE/$MODULE-$VERSION.zip
+TARGET=/var/www/repo/$ORGANIZATION/$MODULE-$VERSION.zip
 
 rm -fr dist
 play dependencies --sync

@@ -1,6 +1,7 @@
-self: play-liquibase -> play-liquibase 3.1.1
+self: play-liquibase -> liquibase 3.3.2
 
 require:
-    - play 1.2+
-    - org.liquibase -> liquibase-core 3.1.1:
+    - play [1.2,1.3]
+    - org.liquibase -> liquibase-core 3.3.2:
         transitive: false
+    - com.mattbertolini -> liquibase-slf4j 1.2.+
