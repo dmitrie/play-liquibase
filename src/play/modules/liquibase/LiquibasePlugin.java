@@ -7,7 +7,6 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import liquibase.exception.ValidationFailedException;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import org.hibernate.JDBCException;
@@ -42,7 +41,7 @@ public class LiquibasePlugin extends PlayPlugin {
 
     ResourceAccessor accessor = null;
     if ("jar".equals(scanner)) {
-      accessor = new ClassLoaderResourceAccessor(Play.classloader.getParent());
+      accessor = new DuplicatesIgnorantResourceAccessor(Play.classloader);
     }
     else if ("src".equals(scanner)) {
       accessor = new FileSystemResourceAccessor(Play.applicationPath.getAbsolutePath());
