@@ -42,7 +42,7 @@ public class LiquibasePlugin extends PlayPlugin {
 
     ResourceAccessor accessor = null;
     if ("jar".equals(scanner)) {
-      accessor = new ClassLoaderResourceAccessor(Play.classloader);
+      accessor = new ClassLoaderResourceAccessor(Play.classloader.getParent());
     }
     else if ("src".equals(scanner)) {
       accessor = new FileSystemResourceAccessor(Play.applicationPath.getAbsolutePath());
