@@ -10,14 +10,15 @@ import liquibase.exception.ValidationFailedException;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import org.hibernate.JDBCException;
+import org.slf4j.LoggerFactory;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
-import play.db.DB;
 import play.utils.Properties;
 
 import java.io.*;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +68,7 @@ public class LiquibasePlugin extends PlayPlugin {
 
       try {
 
-        Connection cnx = DB.datasource.getConnection();
+        Connection cnx = getConnection();
 
         Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(cnx));
 
@@ -165,5 +166,14 @@ public class LiquibasePlugin extends PlayPlugin {
     else {
       Logger.info("Auto update flag [%s] != true  => skipping structural update", autoupdate);
     }
+  }
+
+  @SuppressWarnings("CallToDriverManagerGetConnection")
+  private Connection getConnection() throws SQLException {
+    String url = Play.configuration.getProperty("db.url");
+    String username = Play.configuration.getProperty("db.user");
+    String password = Play.configuration.getProperty("db.pass");
+    LoggerFactory.getLogger(LiquibasePlugin.class).info("Migrate DB: " + username + " @ " + url);
+    return DriverManager.getConnection(url, username, password);
   }
 }
