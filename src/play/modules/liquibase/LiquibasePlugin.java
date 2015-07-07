@@ -9,7 +9,6 @@ import liquibase.exception.LiquibaseException;
 import liquibase.exception.ValidationFailedException;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
-import org.hibernate.JDBCException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.Play;
@@ -76,8 +75,10 @@ public class LiquibasePlugin extends PlayPlugin {
         break;
       case STATUS:
         File tmp = Play.tmpDir.createTempFile("liquibase", ".status");
-        liquibase.reportStatus(true, contexts, new FileWriter(tmp));
-        logger.info("status dumped into file [{}]", tmp);
+        try (Writer out = new BufferedWriter(new FileWriter(tmp))) {
+          liquibase.reportStatus(true, contexts, out);
+        }
+        logger.info("status dumped into file [{}]", tmp.getAbsolutePath());
         break;
       case UPDATE:
         liquibase.update(contexts);
