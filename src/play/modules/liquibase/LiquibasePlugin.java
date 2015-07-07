@@ -30,9 +30,9 @@ public class LiquibasePlugin extends PlayPlugin {
   @Override
   public void onApplicationStart() {
 
-    String autoupdate = Play.configuration.getProperty("liquibase.active", "false");
-    String mainchangelogpath = Play.configuration.getProperty("liquibase.changelog", "mainchangelog.xml");
-    String propertiespath = Play.configuration.getProperty("liquibase.properties", "liquibase.properties");
+    String autoUpdate = Play.configuration.getProperty("liquibase.active", "false");
+    String changeLogPath = Play.configuration.getProperty("liquibase.changelog", "mainchangelog.xml");
+    String propertiesPath = Play.configuration.getProperty("liquibase.properties", "liquibase.properties");
     String scanner = Play.configuration.getProperty("liquibase.scanner", "jar");
     String contexts = Play.configuration.getProperty("liquibase.contexts", null);
     contexts = (null != contexts && !contexts.trim().isEmpty()) ? contexts : null;
@@ -62,7 +62,7 @@ public class LiquibasePlugin extends PlayPlugin {
 
     Database db = null;
 
-    if (true == Boolean.valueOf(autoupdate)) {
+    if (true == Boolean.valueOf(autoUpdate)) {
 
       logger.info("Auto update flag found and positive => let's get on with changelog update");
       InputStream pstream = null;
@@ -74,12 +74,12 @@ public class LiquibasePlugin extends PlayPlugin {
 
         Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(cnx));
 
-        final Liquibase liquibase = new Liquibase(mainchangelogpath, accessor, database);
+        final Liquibase liquibase = new Liquibase(changeLogPath, accessor, database);
         if ("jar".equals(scanner)) {
-          pstream = Play.classloader.getResourceAsStream(propertiespath);
+          pstream = Play.classloader.getResourceAsStream(propertiesPath);
         }
         else {
-          pstream = new FileInputStream(Play.getFile(propertiespath));
+          pstream = new FileInputStream(Play.getFile(propertiesPath));
         }
 
         if (null != pstream) {
@@ -93,7 +93,7 @@ public class LiquibasePlugin extends PlayPlugin {
           }
         }
         else {
-          logger.info("Could not find properties file [{}]", propertiespath);
+          logger.info("Could not find properties file [{}]", propertiesPath);
         }
 
         db = liquibase.getDatabase();
@@ -166,7 +166,7 @@ public class LiquibasePlugin extends PlayPlugin {
 
     }
     else {
-      logger.info("Auto update flag [{}] != true  => skipping structural update", autoupdate);
+      logger.info("Auto update flag [{}] != true  => skipping structural update", autoUpdate);
     }
   }
 
