@@ -7,8 +7,8 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DuplicatesIgnorantResourceAccessor extends ClassLoaderResourceAccessor {
-  public DuplicatesIgnorantResourceAccessor(ClassLoader classloader) {
+public class DuplicatesIgnoringResourceAccessor extends ClassLoaderResourceAccessor {
+  public DuplicatesIgnoringResourceAccessor(ClassLoader classloader) {
     super(classloader);
   }
 

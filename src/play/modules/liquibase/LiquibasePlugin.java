@@ -156,7 +156,7 @@ public class LiquibasePlugin extends PlayPlugin {
 
     switch (scanner) {
       case "jar":
-        return new DuplicatesIgnorantResourceAccessor(Play.classloader);
+        return new DuplicatesIgnoringResourceAccessor(Play.classloader);
       case "src":
         return new FileSystemResourceAccessor(Play.applicationPath.getAbsolutePath());
       default:
