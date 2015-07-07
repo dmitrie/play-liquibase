@@ -10,8 +10,8 @@ import liquibase.exception.ValidationFailedException;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import org.hibernate.JDBCException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import play.Logger;
 import play.Play;
 import play.PlayPlugin;
 import play.utils.Properties;
@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LiquibasePlugin extends PlayPlugin {
+
+  private static final Logger logger = LoggerFactory.getLogger(LiquibasePlugin.class);
 
   @Override
   public void onApplicationStart() {
@@ -62,7 +64,7 @@ public class LiquibasePlugin extends PlayPlugin {
 
     if (true == Boolean.valueOf(autoupdate)) {
 
-      Logger.info("Auto update flag found and positive => let's get on with changelog update");
+      logger.info("Auto update flag found and positive => let's get on with changelog update");
       InputStream pstream = null;
       InputStream clstream = null;
 
@@ -86,17 +88,17 @@ public class LiquibasePlugin extends PlayPlugin {
 
           for (String key : props.keySet()) {
             String val = props.get(key);
-            Logger.info("found parameter [%1$s] / [%2$s] for liquibase update", key, val);
+            logger.info("found parameter [{}] / [{}] for liquibase update", key, val);
             liquibase.setChangeLogParameter(key, val);
           }
         }
         else {
-          Logger.warn("Could not find properties file [%s]", propertiespath);
+          logger.info("Could not find properties file [{}]", propertiespath);
         }
 
         db = liquibase.getDatabase();
         for (LiquibaseAction op : acts) {
-          Logger.info("Dealing with op [%s]", op);
+          logger.info("Dealing with op [{}]", op);
 
           switch (op) {
             case LISTLOCKS:
@@ -111,7 +113,7 @@ public class LiquibasePlugin extends PlayPlugin {
             case STATUS:
               File tmp = Play.tmpDir.createTempFile("liquibase", ".status");
               liquibase.reportStatus(true, contexts, new FileWriter(tmp));
-              Logger.info("status dumped into file [%s]", tmp);
+              logger.info("status dumped into file [{}]", tmp);
               break;
             case UPDATE:
               liquibase.update(contexts);
@@ -124,12 +126,12 @@ public class LiquibasePlugin extends PlayPlugin {
                 liquibase.validate();
               }
               catch (ValidationFailedException e) {
-                Logger.error(e, "liquibase validation");
+                logger.error("liquibase validation error", e);
               }
             default:
               break;
           }
-          Logger.info("op [%s] performed", op);
+          logger.info("op [{}] performed", op);
         }
       }
       catch (SQLException | LiquibaseException | IOException sqe) {
@@ -141,7 +143,7 @@ public class LiquibasePlugin extends PlayPlugin {
             db.close();
           }
           catch (DatabaseException | JDBCException e) {
-            Logger.warn(e, "problem closing connection: " + e, e);
+            logger.warn("problem closing connection: " + e, e);
           }
         }
         if (null != pstream) {
@@ -149,7 +151,7 @@ public class LiquibasePlugin extends PlayPlugin {
             pstream.close();
           }
           catch (Exception e) {
-            Logger.warn(e, "problem closing pstream: " + e, e);
+            logger.warn("problem closing pstream: " + e, e);
           }
         }
         if (null != clstream) {
@@ -157,14 +159,14 @@ public class LiquibasePlugin extends PlayPlugin {
             clstream.close();
           }
           catch (Exception e) {
-            Logger.warn(e, "problem closing clstream: " + e, e);
+            logger.warn("problem closing clstream: " + e, e);
           }
         }
       }
 
     }
     else {
-      Logger.info("Auto update flag [%s] != true  => skipping structural update", autoupdate);
+      logger.info("Auto update flag [{}] != true  => skipping structural update", autoupdate);
     }
   }
 
@@ -173,7 +175,7 @@ public class LiquibasePlugin extends PlayPlugin {
     String url = Play.configuration.getProperty("db.url");
     String username = Play.configuration.getProperty("db.user");
     String password = Play.configuration.getProperty("db.pass");
-    LoggerFactory.getLogger(LiquibasePlugin.class).info("Migrate DB: " + username + " @ " + url);
+    logger.info("Migrate DB: {} @ {}", username, url);
     return DriverManager.getConnection(url, username, password);
   }
 }
