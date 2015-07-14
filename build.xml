@@ -19,7 +19,7 @@
     </fileset>
   </path>
 
-  <target name="build" depends="compile">
+  <target name="build" depends="compile, test">
     <mkdir dir="lib"/>
     <copy todir="tmp/classes">
       <fileset dir="src">
@@ -41,9 +41,34 @@
 
   <target name="compile" depends="check">
     <mkdir dir="tmp/classes"/>
+    <mkdir dir="tmp/test-classes"/>
+
     <javac srcdir="src" destdir="tmp/classes" target="1.7" source="1.7" debug="true">
       <classpath refid="project.classpath"/>
     </javac>
+    <javac srcdir="test" destdir="tmp/test-classes" target="1.7" source="1.7" debug="true">
+      <classpath>
+        <path path="tmp/classes"/>
+        <path refid="project.classpath"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile">
+    <mkdir dir="tmp/test-results"/>
+    <junit maxmemory="128m" haltonfailure="false" failureproperty="tests-failed" fork="true">
+      <batchtest todir="tmp/test-results">
+        <fileset dir="tmp/test-classes" includes="**/*Test.class" excludes="**/Abstract*"/>
+        <formatter type="xml"/>
+        <formatter type="plain" usefile="false"/>
+      </batchtest>
+      <classpath>
+        <path path="tmp/classes"/>
+        <path path="tmp/test-classes"/>
+        <path refid="project.classpath"/>
+      </classpath>
+    </junit>
+    <fail if="tests-failed"/>
   </target>
 
 </project>
