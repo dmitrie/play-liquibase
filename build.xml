@@ -36,10 +36,13 @@
         </section>
       </manifest>
     </jar>
+  </target>
+
+  <target name="init">
     <delete dir="tmp"/>
   </target>
 
-  <target name="compile" depends="check">
+  <target name="compile" depends="check, init">
     <mkdir dir="tmp/classes"/>
     <mkdir dir="tmp/test-classes"/>
 
