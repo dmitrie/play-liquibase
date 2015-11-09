@@ -4,8 +4,12 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.*;
+
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 
 public class DuplicatesIgnoringResourceAccessor extends ClassLoaderResourceAccessor {
   public DuplicatesIgnoringResourceAccessor(ClassLoader classloader) {
@@ -13,13 +17,36 @@ public class DuplicatesIgnoringResourceAccessor extends ClassLoaderResourceAcces
   }
 
   @Override public Set<InputStream> getResourcesAsStream(String path) throws IOException {
-    Set<InputStream> resources = super.getResourcesAsStream(path);
-    return resources == null || resources.size() <= 1 ? resources : firstElement(resources);
+    Set<String> foundResources = findResourcesUrls(path);
+    if (foundResources == null || foundResources.isEmpty()) return emptySet();
+
+    return singleton(openUrlInputStream(findNewestResource(foundResources)));
   }
 
-  public HashSet<InputStream> firstElement(Set<InputStream> resources) {
-    HashSet<InputStream> result = new HashSet<>();
-    result.add(resources.iterator().next());
-    return result;
+  private String findNewestResource(Set<String> foundResources) {
+    SortedSet<String> sortedUrls = new TreeSet<>(new UrlComparatorByLastModificationTime());
+    sortedUrls.addAll(foundResources);
+
+    return sortedUrls.iterator().next();
+  }
+
+  private InputStream openUrlInputStream(String freshestResource) throws IOException {
+    URLConnection connection = new URL(freshestResource).openConnection();
+    connection.setUseCaches(false);
+    return connection.getInputStream();
+  }
+
+  private Set<String> findResourcesUrls(String path) throws IOException {
+    Enumeration<URL> resources = toClassLoader().getResources(path);
+    if (resources == null || !resources.hasMoreElements()) {
+      return null;
+    }
+    Set<String> allUrls = new HashSet<>();
+    while (resources.hasMoreElements()) {
+      URL url = resources.nextElement();
+      allUrls.add(url.toExternalForm());
+    }
+    
+    return allUrls;
   }
 }
