@@ -4,3 +4,5 @@ lib
 bin
 release
 *.iml
+tmp
+dist
