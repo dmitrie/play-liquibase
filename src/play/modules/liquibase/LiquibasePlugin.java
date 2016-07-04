@@ -86,6 +86,9 @@ public class LiquibasePlugin extends PlayPlugin {
       case CLEARCHECKSUMS:
         liquibase.clearCheckSums();
         break;
+      case DROPALL:
+        liquibase.dropAll();
+        break;
       case VALIDATE:
         try {
           liquibase.validate();

@@ -7,5 +7,6 @@ public enum LiquibaseAction {
   RELEASELOCKS,
   STATUS,
   VALIDATE,
-  CLEARCHECKSUMS
+  CLEARCHECKSUMS,
+  DROPALL,
 }
