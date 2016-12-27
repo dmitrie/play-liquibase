@@ -4,8 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 import play.Play;
 
-import java.util.Properties;
-
 import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 import static play.modules.liquibase.LiquibaseAction.UPDATE;
@@ -16,7 +14,7 @@ public class LiquibasePluginTest {
 
   @Before
   public void setUp() {
-    Play.configuration = new Properties();
+    Play.configuration.clear();
   }
 
   @Test
