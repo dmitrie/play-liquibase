@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="play-liquibase" default="build" basedir=".">
+  <property name="liquibase.version" value="3.5.3" />
 
   <target name="check" unless="play.path">
     <fail message="Please specify Play framework path using -Dplay.path=/path/to/framework/home"/>
@@ -19,7 +20,7 @@
     </fileset>
   </path>
 
-  <target name="build" depends="compile, test">
+  <target name="build" depends="updateLibraries, compile, test">
     <mkdir dir="lib"/>
     <copy todir="tmp/classes">
       <fileset dir="src">
@@ -46,10 +47,10 @@
     <mkdir dir="tmp/classes"/>
     <mkdir dir="tmp/test-classes"/>
 
-    <javac srcdir="src" destdir="tmp/classes" target="1.7" source="1.7" debug="true">
+    <javac srcdir="src" destdir="tmp/classes" target="1.8" source="1.8" debug="true">
       <classpath refid="project.classpath"/>
     </javac>
-    <javac srcdir="test" destdir="tmp/test-classes" target="1.7" source="1.7" debug="true">
+    <javac srcdir="test" destdir="tmp/test-classes" target="1.8" source="1.8" debug="true">
       <classpath>
         <path path="tmp/classes"/>
         <path refid="project.classpath"/>
@@ -74,4 +75,12 @@
     <fail if="tests-failed"/>
   </target>
 
+  <!-- Removes overridden classes from libraries to make sure only the right version is available in the classpath -->
+  <target name="updateLibraries">
+      <echo>Removing overridden classes from libraries</echo>
+      <zip destfile="lib/liquibase-core-${liquibase.version}.hacked.jar">
+          <zipfileset src="lib/liquibase-core-${liquibase.version}.jar" excludes="liquibase/sqlgenerator/core/LockDatabaseChangeLogGenerator.*" />
+      </zip>
+      <delete file="lib/liquibase-core-${liquibase.version}.jar"/>
+  </target>
 </project>

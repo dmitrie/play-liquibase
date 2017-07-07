@@ -1,0 +1,6 @@
+## Changelog
+
+### 4.3 (2017-07-07)
+
+ * upgrade to liquibase 3.5.3
+ * hack class LockDatabaseChangeLogGenerator to avoid wasting time on resolving host name (log only IP)
