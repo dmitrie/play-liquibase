@@ -1,4 +1,4 @@
-self: play-liquibase -> liquibase 4.3
+self: play-liquibase -> liquibase 4.3.1
 
 require:
     - play [1.2,1.5]
