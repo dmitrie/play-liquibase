@@ -1,0 +1,20 @@
+language: java
+env:
+  - PLAY_BRANCH=lab
+before_install:
+  - git clone --depth=1 -b ${PLAY_BRANCH} https://github.com/dmitrie/play.git tmp/play-${PLAY_BRANCH}
+  - cd tmp/play-${PLAY_BRANCH}/framework
+  - time ant
+  - cd ${TRAVIS_BUILD_DIR}
+install: tmp/play-${PLAY_BRANCH}/play dependencies --sync
+script: tmp/play-${PLAY_BRANCH}/play build-module
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: O/QqMyxx/a16PY8Qzq3jBjnuqwPZ2c33TlVgrBPg56XiptMxm+pHuOiL0iaFawnDYrDj3QQ5+RhyA74kQkPd/vewlgYfrdetuQpPWiH59xd/TW5VYSfb55sZTh3zIbG8syl/texd56WxQpCZTrCyVvS8oWAA7E3PM/si/ASVaHsGx1ZtqOno+SUK526sBFsfWtboEODwgVf1gurfDBb9u4S277sVpUyS2sX4/66TOriSzH2yJde1VVN2v0qXDFk9s5phaPvMoz/byNdQ2d8WXCsEtEWoPZj+oKB5upwrLHxGFH6TBlwViIPigJGpmdzQW/IMUyYEtutP5kuXV1JClZOPkNPWM6t5nGW6I7nKQvfPSmHBmp3k5IFKZnoQBzzacmFfWzdcHM0ZiZjwiWF4nm5LLKLmyLJVYP81jjZAnXIZv+dTFkrk5Q7HEBisVuGzHN8TyGcRLa/nhiDw5Cj5kaFeNI7GD2P8ajRNopxHSckl+ACdfNyQ+Zek3E5JUQlgZ6Djkz6USTI60molZOp+7KBqwo4CE4w0qsbu87Cgl18NTD4aJFMX+M/L0z5hX8RzfdAI0u/kHc94kBxEsH/JVEFhRm1txOmY1GOmMT//1LeiVgbrAbQMnwA6aP9oqATmI9PZXu9tb4R3lrbFYrRbKUgc6inT+cgLjF4JYcB9H0Q=
+  file_glob: true
+  file: dist/*.zip
+  on:
+    tags: true
+    repo: dmitrie/play-liquibase
